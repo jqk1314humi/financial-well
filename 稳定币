@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DZCHY - 科技感稳定币交易平台</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00CFFD',
+                        secondary: '#7A4FFF',
+                        dark: '#0F172A',
+                        darker: '#0A0F1F',
+                        light: '#F8FAFC',
+                        accent: '#FF3D71'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px rgba(0, 207, 253, 0.5)' },
+                            '100%': { boxShadow: '0 0 20px rgba(0, 207, 253, 0.8), 0 0 30px rgba(122, 79, 255, 0.5)' }
+                        }
+                    }
+                },
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-gradient {
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .bg-glass {
+                backdrop-filter: blur(16px);
+                background-color: rgba(15, 23, 42, 0.7);
+            }
+            .border-glow {
+                box-shadow: 0 0 10px rgba(0, 207, 253, 0.3);
+            }
+        }
+    </style>
+    
+    <!-- 额外样式 -->
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(0, 207, 253, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 80% 60%, rgba(122, 79, 255, 0.1) 0%, transparent 30%);
+            background-color: #0F172A;
+            background-attachment: fixed;
+        }
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        input:focus,
+        button:focus {
+            outline: 2px solid #00CFFD;
+            outline-offset: 2px;
+        }
+        .chart-bar {
+            transition: height 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="font-sans text-light min-h-screen">
+    <!-- 页面加载动画 -->
+    <div id="loader" class="fixed inset-0 flex items-center justify-center z-50 bg-darker">
+        <div class="relative">
+            <div class="w-24 h-24 rounded-full border-4 border-primary/30 border-t-primary animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-xl font-bold bg-gradient-to-r from-primary to-secondary text-gradient">DZCHY</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <header class="fixed top-0 left-0 right-0 z-40 transition-all duration-300 bg-glass">
+        <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-gradient mr-8">DZCHY</div>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#home" class="text-white/80 hover:text-primary transition-colors">首页</a>
+                    <a href="#features" class="text-white/80 hover:text-primary transition-colors">特性</a>
+                    <a href="#purchase" class="text-white/80 hover:text-primary transition-colors">购买</a>
+                    <a href="#faq" class="text-white/80 hover:text-primary transition-colors">常见问题</a>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button class="border border-primary/50 text-primary px-4 py-2 rounded-md hover:bg-primary/10 transition-colors duration-300">登录</button>
+                <button class="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-md hover:shadow-lg hover:shadow-primary/20 transition-all duration-300">注册</button>
+                <!-- 用户菜单触发器 (默认隐藏) -->
+                <div id="userMenuTrigger" class="hidden flex items-center gap-2 px-4 py-2 rounded-md text-primary cursor-pointer hover:bg-primary/10 transition-colors">
+                    <i class="fa fa-user-circle text-xl"></i>
+                    <span id="menuUserName">用户名</span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 用户菜单下拉框 (默认隐藏) -->
+    <div id="userMenu" class="fixed top-16 right-4 bg-darker border border-primary/20 rounded-lg shadow-lg shadow-primary/10 w-48 hidden z-50 overflow-hidden">
+        <div class="p-4 border-b border-white/10">
+            <div class="font-medium" id="userName">用户名</div>
+            <div class="text-xs text-white/60 mt-1" id="userBalance">0.00 DZCHY</div>
+        </div>
+        <div class="py-2">
+            <a href="#" class="block px-4 py-2 hover:bg-primary/10 transition-colors"><i class="fa fa-user mr-2"></i>个人中心</a>
+            <a href="#" class="block px-4 py-2 hover:bg-primary/10 transition-colors"><i class="fa fa-wallet mr-2"></i>我的钱包</a>
+            <a href="#" class="block px-4 py-2 hover:bg-primary/10 transition-colors"><i class="fa fa-history mr-2"></i>交易记录</a>
+            <a href="#" class="block px-4 py-2 hover:bg-primary/10 transition-colors"><i class="fa fa-cog mr-2"></i>账户设置</a>
+            <div class="border-t border-white/10 mt-2 pt-2">
+                <button id="logoutBtn" class="w-full text-left px-4 py-2 text-red-400 hover:bg-red-400/10 transition-colors"><i class="fa fa-sign-out mr-2"></i>退出登录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 pt-24 pb-16">
+        <!-- 首页区域 -->
+        <section id="home" class="min-h-[70vh] flex flex-col justify-center">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <h1 class="text-[clamp(2.5rem,5vw,4rem)] font-bold leading-tight">
+                        未来金融，<span class="bg-gradient-to-r from-primary to-secondary text-gradient">从DZCHY开始</span>
+                    </h1>
+                    <p class="text-white/70 text-lg">
+                        DZCHY是新一代稳定币，提供安全、快速、低成本的数字资产交易体验。
+                        立即加入我们，开启数字化金融新时代。
+                    </p>
+                    <div class="flex flex-wrap gap-4 pt-4">
+                        <a href="#purchase" class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-md hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 text-lg font-medium">
+                            立即购买 <i class="fa fa-arrow-right ml-2"></i>
+                        </a>
+                        <a href="#features" class="border border-primary/50 text-primary px-6 py-3 rounded-md hover:bg-primary/10 transition-colors duration-300 text-lg font-medium">
+                            了解更多 <i class="fa fa-info-circle ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-xl animate-pulse-slow"></div>
+                    <div class="relative bg-darker p-6 rounded-xl border border-primary/20 shadow-xl animate-float">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-gradient">DZCHY</div>
+                            <div class="flex space-x-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <div class="text-sm text-white/60 mb-1">DZCHY/CNY</div>
+                            <div class="text-4xl font-bold">¥1.00</div>
+                            <div class="text-sm text-green-400">+0.00%</div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-dark/50 p-3 rounded-lg">
+                                    <div class="text-xs text-white/60">24H高</div>
+                                    <div class="font-medium">¥1.00</div>
+                                </div>
+                                <div class="bg-dark/50 p-3 rounded-lg">
+                                    <div class="text-xs text-white/60">24H低</div>
+                                    <div class="font-medium">¥1.00</div>
+                                </div>
+                            </div>
+                            <div class="bg-dark/50 p-3 rounded-lg">
+                                <div class="text-xs text-white/60 mb-1">24H交易量</div>
+                                <div class="font-medium">¥12,500,000</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 简易图表 -->
+                        <div class="mt-6 h-32 relative">
+                            <div class="absolute bottom-0 left-0 right-0 h-full flex items-end justify-between px-1">
+                                <div class="relative w-1.5" style="height: 40%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 60%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 35%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 70%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 45%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 80%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 90%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 65%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 75%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 85%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                                <div class="relative w-1.5" style="height: 100%">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-secondary chart-bar" style="height: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 特性区域 -->
+        <section id="features" class="py-20">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4">为什么选择<span class="bg-gradient-to-r from-primary to-secondary text-gradient">DZCHY</span></h2>
+                <p class="text-white/70 text-lg">我们提供领先的技术和安全保障，让您的数字资产交易更加便捷和安心。</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-darker p-6 rounded-xl border border-primary/20 hover:border-glow transition-all duration-300">
+                    <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa fa-shield text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">安全可靠</h3>
+                    <p class="text-white/70">采用多重加密技术和分布式账本，确保您的资产安全无虞。</p>
+                </div>
+                
+                <div class="bg-darker p-6 rounded-xl border border-primary/20 hover:border-glow transition-all duration-300">
+                    <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa fa-bolt text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">即时交易</h3>
+                    <p class="text-white/70">交易确认时间仅需数秒，让您快速完成资产转换。</p>
+                </div>
+                
+                <div class="bg-darker p-6 rounded-xl border border-primary/20 hover:border-glow transition-all duration-300">
+                    <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa fa-dollar text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">低手续费</h3>
+                    <p class="text-white/70">行业领先的低手续费模式，让您的每一笔交易更具价值。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 购买区域 -->
+        <section id="purchase" class="py-20">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4">购买<span class="bg-gradient-to-r from-primary to-secondary text-gradient">DZCHY</span></h2>
+                <p class="text-white/70 text-lg">简单几步，即可拥有数字时代的稳定资产。</p>
+            </div>
+            
+            <div class="max-w-2xl mx-auto">
+                <div class="relative">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl blur-xl"></div>
+                    <div class="relative bg-darker p-8 rounded-xl border border-primary/20">
+                        <h3 class="text-xl font-semibold mb-6">购买表单</h3>
+                        
+                        <form id="purchaseForm" class="space-y-6">
+                            <div>
+                                <label for="cnyAmount" class="block text-sm font-medium text-white/80 mb-2">投入金额 (CNY)</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-white/60">¥</span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        id="cnyAmount"
+                                        class="w-full bg-dark/50 border border-white/10 rounded-lg py-3 pl-8 pr-3 text-white focus:border-primary transition-colors"
+                                        placeholder="输入购买金额"
+                                        min="10"
+                                        step="0.01"
+                                    >
+                                </div>
+                                <p class="text-xs text-white/50 mt-1">最低购买金额：10 CNY</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-white/80 mb-2">获得数量 (DZCHY)</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-white/60">DZCHY</span>
+                                    </div>
+                                    <div class="w-full bg-dark/50 border border-white/10 rounded-lg py-3 pl-10 pr-3 text-white">
+                                        <span id="dzchyAmount">0.00</span>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-white/50 mt-1">汇率：1 CNY = 1 DZCHY</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-white/80 mb-2">支付方式</label>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div class="bg-dark/50 border border-white/10 rounded-lg py-3 px-4 text-center cursor-pointer hover:border-primary transition-colors">
+                                        <i class="fa fa-credit-card mr-1"></i> 银行卡
+                                    </div>
+                                    <div class="bg-dark/50 border border-white/10 rounded-lg py-3 px-4 text-center cursor-pointer hover:border-primary transition-colors">
+                                        <i class="fa fa-wechat mr-1"></i> 微信
+                                    </div>
+                                    <div class="bg-dark/50 border border-white/10 rounded-lg py-3 px-4 text-center cursor-pointer hover:border-primary transition-colors">
+                                        <i class="fa fa-alipay mr-1"></i> 支付宝
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button
+                                type="submit"
+                                class="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 font-medium"
+                            >
+                                确认购买
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 常见问题区域 -->
+        <section id="faq" class="py-20">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4">常见<span class="bg-gradient-to-r from-primary to-secondary text-gradient">问题</span></h2>
+                <p class="text-white/70 text-lg">解答您可能遇到的问题，如有其他疑问，请联系客服。</p>
+            </div>
+            
+            <div class="max-w-3xl mx-auto space-y-4">
+                <div>
+                    <button class="w-full px-6 py-4 bg-dark/30 rounded-lg flex justify-between items-center text-left">
+                        <span class="font-medium">什么是DZCHY？</span>
+                        <i class="fa fa-chevron-down text-primary transition-transform duration-300"></i>
+                    </button>
+                    <div class="px-6 py-4 bg-dark/10 rounded-b-lg">
+                        <p class="text-white/70">DZCHY是一种与人民币1:1锚定的稳定币，旨在为用户提供安全、稳定的数字资产交易和存储解决方案。</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <button class="w-full px-6 py-4 bg-dark/30 rounded-lg flex justify-between items-center text-left">
+                        <span class="font-medium">如何购买DZCHY？</span>
+                        <i class="fa fa-chevron-down text-primary transition-transform duration-300"></i>
+                    </button>
+                    <div class="px-6 py-4 bg-dark/10 rounded-b-lg hidden">
+                        <p class="text-white/70">在本站注册并登录后，通过购买表单输入金额，选择支付方式，即可完成购买。最低购买金额为10 CNY。</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <button class="w-full px-6 py-4 bg-dark/30 rounded-lg flex justify-between items-center text-left">
+                        <span class="font-medium">购买后如何查看我的DZCHY余额？</span>
+                        <i class="fa fa-chevron-down text-primary transition-transform duration-300"></i>
+                    </button>
+                    <div class="px-6 py-4 bg-dark/10 rounded-b-lg hidden">
+                        <p class="text-white/70">登录后，点击右上角用户头像，在下拉菜单中可以查看您的DZCHY余额。同时，您也可以在"我的钱包"页面查看详细的资产情况。</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <button class="w-full px-6 py-4 bg-dark/30 rounded-lg flex justify-between items-center text-left">
+                        <span class="font-medium">DZCHY是否安全？</span>
+                        <i class="fa fa-chevron-down text-primary transition-transform duration-300"></i>
+                    </button>
+                    <div class="px-6 py-4 bg-dark/10 rounded-b-lg hidden">
+                        <p class="text-white/70">我们采用多重加密技术和严格的安全措施保护用户资产。所有交易均通过区块链技术记录，确保透明和不可篡改。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-darker border-t border-white/10 py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-gradient mb-4">DZCHY</div>
+                    <p class="text-white/70 mb-4">打造数字金融的未来，让资产交易更简单、更安全。</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-white/60 hover:text-primary transition-colors"><i class="fa fa-twitter text-xl"></i></a>
+                        <a href="#" class="text-white/60 hover:text-primary transition-colors"><i class="fa fa-telegram text-xl"></i></a>
+                        <a href="#" class="text-white/60 hover:text-primary transition-colors"><i class="fa fa-discord text-xl"></i></a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold mb-4">产品</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#purchase" class="text-white/60 hover:text-primary transition-colors">购买DZCHY</a></li>
+                        <li><a href="#" class="text-white/60 hover:text-primary transition-colors">钱包下载</a></li>
+                        <li><a href="#" class="text-white/60 hover:text-primary transition-colors">API文档</a></li>
+                        <li><a href="#" class="text-white/60 hover:text-primary transition-colors">企业解决方案</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold mb-4">支持</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#faq" class="text-white/60 hover:text-primary transition-colors">常见问题</a></li>
+                        <li><a href="#" class="text-white/60 hover:text-primary transition-colors">帮助中心</a></li>
+                        <li><a href="#" class="text-white/60 hover:text-primary transition-colors">联系我们</a></li>
+                        <li><a href="#" class="text-white/60 hover:text-primary transition-colors">隐私政策</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold mb-4">订阅最新消息</h3>
+                    <div class="flex">
+                        <input
+                            type="email"
+                            placeholder="您的邮箱地址"
+                            class="bg-dark/50 border border-white/10 rounded-l-lg py-2 px-3 text-white focus:border-primary transition-colors w-full"
+                        >
+                        <button class="bg-primary text-white px-4 rounded-r-lg hover:bg-primary/90 transition-colors">
+                            订阅
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/10 mt-8 pt-8 text-center text-white/50 text-sm">
+                © 2023 DZCHY. 保留所有权利。
+            </div>
+        </div>
+    </footer>
+
+    <!-- 成功购买模态框 -->
+    <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-darker border border-primary/20 rounded-xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-check text-2xl text-green-400"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">操作成功</h3>
+                <p id="successMessage" class="text-white/70 mb-6">您的交易已完成。</p>
+                <button id="closeModal" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    确定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录模态框 -->
+    <div id="loginModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-darker border border-primary/20 rounded-xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">登录</h3>
+                <button id="closeLoginModal" class="text-white/60 hover:text-white transition-colors">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="loginUsername" class="block text-sm font-medium text-white/80 mb-2">用户名</label>
+                    <input
+                        type="text"
+                        id="loginUsername"
+                        class="w-full bg-dark/50 border border-white/10 rounded-lg py-3 px-3 text-white focus:border-primary transition-colors"
+                        placeholder="请输入用户名"
+                        required
+                    >
+                </div>
+                
+                <div>
+                    <label for="loginPassword" class="block text-sm font-medium text-white/80 mb-2">密码</label>
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        class="w-full bg-dark/50 border border-white/10 rounded-lg py-3 px-3 text-white focus:border-primary transition-colors"
+                        placeholder="请输入密码"
+                        required
+                    >
+                </div>
+                
+                <div class="text-red-400 text-sm hidden" id="loginError"></div>
+                
+                <button
+                    type="submit"
+                    class="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 font-medium"
+                >
+                    登录
+                </button>
+                
+                <div class="text-center text-white/70">
+                    还没有账号？ <span id="switchToRegister" class="text-primary cursor-pointer hover:underline">立即注册</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div id="registerModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-darker border border-primary/20 rounded-xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">注册</h3>
+                <button id="closeRegisterModal" class="text-white/60 hover:text-white transition-colors">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label for="registerUsername" class="block text-sm font-medium text-white/80 mb-2">用户名</label>
+                    <input
+                        type="text"
+                        id="registerUsername"
+                        class="w-full bg-dark/50 border border-white/10 rounded-lg py-3 px-3 text-white focus:border-primary transition-colors"
+                        placeholder="请设置用户名 (4-20位)"
+                        required
+                        minlength="4"
+                        maxlength="20"
+                    >
+                </div>
+                
+                <div>
+                    <label for="registerEmail" class="block text-sm font-medium text-white/80 mb-2">邮箱</label>
+                    <input
+                        type="email"
+                        id="registerEmail"
+                        class="w-full bg-dark/50 border border-white/10 rounded-lg py-3 px-3 text-white focus:border-primary transition-colors"
+                        placeholder="请输入邮箱地址"
+                        required
+                    >
+                </div>
+                
+                <div>
+                    <label for="registerPassword" class="block text-sm font-medium text-white/80 mb-2">密码</label>
+                    <input
+                        type="password"
+                        id="registerPassword"
+                        class="w-full bg-dark/50 border border-white/10 rounded-lg py-3 px-3 text-white focus:border-primary transition-colors"
+                        placeholder="请设置密码 (至少8位)"
+                        required
+                        minlength="8"
+                    >
+                </div>
+                
+                <div class="text-red-400 text-sm hidden" id="registerError"></div>
+                
+                <div class="flex items-start">
+                    <input
+                        type="checkbox"
+                        id="termsAgree"
+                        class="mt-1 mr-2 accent-primary"
+                        required
+                    >
+                    <label for="termsAgree" class="text-sm text-white/70">
+                        我已阅读并同意 <a href="#" class="text-primary hover:underline">服务条款</a> 和 <a href="#" class="text-primary hover:underline">隐私政策</a>
+                    </label>
+                </div>
+                
+                <button
+                    type="submit"
+                    class="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 font-medium"
+                >
+                    注册
+                </button>
+                
+                <div class="text-center text-white/70">
+                    已有账号？ <span id="switchToLogin" class="text-primary cursor-pointer hover:underline">立即登录</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 创建用户数据文件 -->
+    <script src="userData.js"></script>
+    
+    <!-- 页面功能脚本 -->
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 隐藏加载动画
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('opacity-0');
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                }, 300);
+            }, 1500);
+            
+            // DOM 元素
+            const cnyAmountInput = document.getElementById('cnyAmount');
+            const dzchyAmountDisplay = document.getElementById('dzchyAmount');
+            const purchaseForm = document.getElementById('purchaseForm');
+            const successModal = document.getElementById('successModal');
+            const successMessage = document.getElementById('successMessage');
+            const closeModal = document.getElementById('closeModal');
+            const faqButtons = document.querySelectorAll('button[class*="w-full px-6 py-4 bg-dark/30"]');
+            
+            // 登录/注册相关DOM元素
+            const loginButton = document.querySelector('button.border.border-primary/50');
+            const registerButton = document.querySelector('button.bg-gradient-to-r.from-primary.to-secondary:not([id])');
+            const loginModal = document.getElementById('loginModal');
+            const registerModal = document.getElementById('registerModal');
+            const closeLoginModal = document.getElementById('closeLoginModal');
+            const closeRegisterModal = document.getElementById('closeRegisterModal');
+            const switchToRegister = document.getElementById('switchToRegister');
+            const switchToLogin = document.getElementById('switchToLogin');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginError = document.getElementById('loginError');
+            const registerError = document.getElementById('registerError');
+            
+            // 用户菜单相关DOM元素
+            const userMenu = document.getElementById('userMenu');
+            const userNameElement = document.getElementById('userName');
+            const userBalanceElement = document.getElementById('userBalance');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userMenuTrigger = document.getElementById('userMenuTrigger');
+
+            // 汇率常量
+            const EXCHANGE_RATE = 1; // 1 CNY = 1 DZCHY
+
+            // 人民币输入事件监听
+            cnyAmountInput.addEventListener('input', function() {
+                const cnyAmount = parseFloat(this.value) || 0;
+                const dzchyAmount = cnyAmount * EXCHANGE_RATE;
+                dzchyAmountDisplay.textContent = dzchyAmount.toFixed(2);
+            });
+
+            // 表单提交处理
+            purchaseForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 检查用户是否已登录
+                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                if (!isLoggedIn) {
+                    // 如果未登录，先显示登录模态框
+                    openModal(loginModal);
+                    showError(loginError, '请先登录后再进行购买');
+                    return;
+                }
+                
+                const cnyAmount = parseFloat(cnyAmountInput.value) || 0;
+                if (cnyAmount < 10) {
+                    alert('最低购买金额为 10 CNY');
+                    return;
+                }
+                
+                const dzchyAmount = cnyAmount * EXCHANGE_RATE;
+                
+                // 更新用户余额 (模拟)
+                const currentBalance = parseFloat(userBalanceElement.textContent) || 0;
+                const newBalance = currentBalance + dzchyAmount;
+                userBalanceElement.textContent = newBalance.toFixed(2) + ' DZCHY';
+                
+                // 保存余额到用户数据
+                saveUserBalance(userNameElement.textContent, newBalance.toFixed(2));
+                
+                // 显示成功模态框
+                successMessage.innerHTML = `您已成功购买 <span class="text-primary">${dzchyAmount.toFixed(2)} DZCHY</span>`;
+                openModal(successModal);
+                
+                // 重置表单
+                setTimeout(() => {
+                    purchaseForm.reset();
+                    dzchyAmountDisplay.textContent = '0.00';
+                }, 1000);
+            });
+
+            // 模态框控制函数
+            function openModal(modal) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modal.querySelector('div').classList.remove('scale-95');
+                modal.querySelector('div').classList.add('scale-100');
+                document.body.style.overflow = 'hidden'; // 防止背景滚动
+            }
+            
+            function closeModalFunc(modal) {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.querySelector('div').classList.remove('scale-100');
+                modal.querySelector('div').classList.add('scale-95');
+                document.body.style.overflow = ''; // 恢复背景滚动
+            }
+            
+            // 显示错误信息
+            function showError(element, message) {
+                element.textContent = message;
+                element.classList.remove('hidden');
+                setTimeout(() => {
+                    element.classList.add('hidden');
+                }, 5000);
+            }
+            
+            // 用户状态管理
+            function updateUserUI(isLoggedIn, username = '') {
+                if (isLoggedIn) {
+                    // 隐藏登录/注册按钮
+                    loginButton.classList.add('hidden');
+                    registerButton.classList.add('hidden');
+                    
+                    // 显示用户菜单触发器
+                    userMenuTrigger.classList.remove('hidden');
+                    document.getElementById('menuUserName').textContent = username;
+                    userNameElement.textContent = username;
+                    
+                    // 保存用户登录状态到localStorage
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('username', username);
+                    
+                    // 加载用户余额
+                    const balance = getUserBalance(username);
+                    if (balance !== null) {
+                        userBalanceElement.textContent = balance + ' DZCHY';
+                    }
+                } else {
+                    // 显示登录/注册按钮
+                    loginButton.classList.remove('hidden');
+                    registerButton.classList.remove('hidden');
+                    
+                    // 隐藏用户菜单触发器
+                    userMenuTrigger.classList.add('hidden');
+                    userMenu.classList.add('hidden');
+                    
+                    // 清除localStorage中的登录状态
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('username');
+                }
+            }
+            
+            // 检查用户登录状态
+            function checkLoginStatus() {
+                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                const username = localStorage.getItem('username') || '';
+                
+                if (isLoggedIn && username) {
+                    updateUserUI(true, username);
+                }
+            }
+            
+            // 登录表单提交处理
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('loginUsername').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                // 简单的前端验证
+                if (!username || !password) {
+                    showError(loginError, '请填写所有必填字段');
+                    return;
+                }
+                
+                // 验证用户登录
+                if (validateUserLogin(username, password)) {
+                    // 登录成功
+                    closeModalFunc(loginModal);
+                    updateUserUI(true, username);
+                    
+                    // 显示登录成功提示
+                    successMessage.textContent = `欢迎回来，${username}！`;
+                    openModal(successModal);
+                    
+                    // 重置表单
+                    loginForm.reset();
+                } else {
+                    showError(loginError, '用户名或密码错误');
+                }
+            });
+            
+            // 注册表单提交处理
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('registerUsername').value;
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+                
+                // 简单的前端验证
+                if (!username || !email || !password) {
+                    showError(registerError, '请填写所有必填字段');
+                    return;
+                }
+                
+                if (username.length < 4 || username.length > 20) {
+                    showError(registerError, '用户名长度应为4-20位');
+                    return;
+                }
+                
+                if (password.length < 8) {
+                    showError(registerError, '密码长度至少为8位');
+                    return;
+                }
+                
+                if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+                    showError(registerError, '请输入有效的邮箱地址');
+                    return;
+                }
+                
+                // 检查用户名是否已存在
+                if (checkUserExists(username)) {
+                    showError(registerError, '用户名已被注册');
+                    return;
+                }
+                
+                // 创建新用户
+                if (createNewUser(username, email, password)) {
+                    // 注册成功后自动登录
+                    closeModalFunc(registerModal);
+                    updateUserUI(true, username);
+                    
+                    // 显示注册成功提示
+                    successMessage.textContent = `注册成功，欢迎加入DZCHY！`;
+                    openModal(successModal);
+                    
+                    // 重置表单
+                    registerForm.reset();
+                } else {
+                    showError(registerError, '注册失败，请稍后再试');
+                }
+            });
+            
+            // FAQ 折叠功能
+            faqButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('i.fa-chevron-down');
+                    
+                    // 切换内容显示/隐藏
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+                
+                // 初始展开第一个FAQ
+                if (button === faqButtons[0]) {
+                    const content = button.nextElementSibling;
+                    const icon = button.querySelector('i.fa-chevron-down');
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+            
+            // 事件监听器
+            loginButton.addEventListener('click', () => openModal(loginModal));
+            registerButton.addEventListener('click', () => openModal(registerModal));
+            closeLoginModal.addEventListener('click', () => closeModalFunc(loginModal));
+            closeRegisterModal.addEventListener('click', () => closeModalFunc(registerModal));
+            closeModal.addEventListener('click', () => closeModalFunc(successModal));
+            
+            // 切换登录/注册
+            switchToRegister.addEventListener('click', () => {
+                closeModalFunc(loginModal);
+                setTimeout(() => openModal(registerModal), 300);
+            });
+            
+            switchToLogin.addEventListener('click', () => {
+                closeModalFunc(registerModal);
+                setTimeout(() => openModal(loginModal), 300);
+            });
+            
+            // 用户菜单交互
+            userMenuTrigger.addEventListener('click', () => {
+                userMenu.classList.toggle('hidden');
+            });
+            
+            // 点击页面其他地方关闭用户菜单
+            document.addEventListener('click', (e) => {
+                if (!userMenuTrigger.contains(e.target) && !userMenu.contains(e.target)) {
+                    userMenu.classList.add('hidden');
+                }
+            });
+            
+            // 退出登录
+            logoutBtn.addEventListener('click', () => {
+                updateUserUI(false);
+                userMenu.classList.add('hidden');
+            });
+            
+            // 检查用户登录状态
+            checkLoginStatus();
+        });
+
+        // 为图表添加动画效果
+        const chartBars = document.querySelectorAll('.relative > .absolute > .absolute > div');
+        chartBars.forEach((bar, index) => {
+            setTimeout(() => {
+                bar.style.opacity = '1';
+            }, index * 50);
+        });
+    </script>
+</body>
+</html>
